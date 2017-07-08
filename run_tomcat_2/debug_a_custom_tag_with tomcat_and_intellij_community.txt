@@ -1,0 +1,105 @@
+Objectif : mettre un breakpoint dans un morceau de code dans un WAR dans tomcat
+dans le même contexte que le boulot (maven, backend java, tomcat) le tout en utilisant intellij community.
+
+Note : Faire CTRL+Shift+A, entrer "Jdk" et bien mettre le bon JDK (oracle) pour le fonctionnement.
+
+1/ Comment initialiser un projet simplement ?
+Création de la webapps avec l'archetype maven
+Créer un projet de type maven en indiquant un archetype "webapps"
+
+
+2/ Comment packager le war ?
+Créer une tache run en indiquant le goal "package"
+
+3/ Comment démarrer tomcat ?
+lancer startup.bat (qui forke le process),
+
+catalina.bat jpda start semble être les option pour démarrer en mode débug
+
+Pour ne pas forker l'écran :
+catalina.bat run
+
+4/ How deploy WAR ?
+https://www.mkyong.com/maven/how-to-deploy-maven-based-war-file-to-tomcat/
+
+- add in tomcat-users.xml file a user with deploy permissions
+	<role rolename="manager-gui"/>
+	<role rolename="manager-script"/>
+	<user username="admin" password="password" roles="manager-gui,manager-script" />
+
+- add this user login and password in maven settings choosing an id
+		<server>
+			<id>Tomcat9Server</id>
+			<username>admin</username>
+			<password>password</password>
+		</server>
+
+- add this in pom xml
+  <build>
+    <finalName>(my-app)</finalName>
+      <plugins>
+      <plugin>
+          <groupId>org.apache.tomcat.maven</groupId>
+          <artifactId>tomcat7-maven-plugin</artifactId>
+          <version>2.2</version>
+          <configuration>
+              <url>http://localhost:8080/manager/text</url>
+              <server>Tomcat9Server</server>
+              <path>/(my-app)</path>
+          </configuration>
+      </plugin>
+      </plugins>
+  </build>
+
+- add in intellij a maven run with the following configuration :
+  Parameter tab/command-line : tomcat7:redeploy
+
+  Be careful here : intellij setting only use on single settings file
+  General tab/User settings file : (point to the file where modifications are done - see upper section)
+
+- start tomcat with startup.bat
+
+- run maven target
+
+If problem you can run "mvn -e -X tomcat7:deploy" and analyze output
+
+
+5/ How to create an "hello world" custom tag lib  ?
+http://beginnersbook.com/2014/01/jsp-custom-tags-with-example-jsp-tutorial/
+http://docs.oracle.com/cd/E11035_01/wls100/taglib/quickstart.html
+
+- Add java file to handle tag in src/main/<my group>/<package path>TagHandler.java
+  Standard JEE project structure suggest java folder under src/main
+
+- Building is ok but maven deploy is KO
+  Note : intellij know about necessary libraries used to compile but not maven.
+    i.e. : CTRL+F9 will work in intellij but not "mvn package"
+    you will have to add necessary dependency in pom.xml
+
+  A way to sort out this things : ask intellij to generate ant build file, section "project libraries"
+  contains useful information to populate pom.xml
+
+- Access : http://localhost:8080/run_tomcat_2/index2.jsp
+
+
+6/ How to debug and setup a breakpoint ?
+- start tomcat using "catalina.bat jpda start"
+
+- in intellij, in menu "Run/Attach to Local Process..." choose appropriate option
+
+- setup a breakpoint and call url !
+
+======================================================================================================
+Random notes
+
+1/ To fix typo problem
+You need correct dictionary
+
+http://stackoverflow.com/questions/1949976/where-to-find-dictionaries-for-other-languages-for-intellij
+
+aspell --lang de dump master | aspell --lang de expand | tr ' ' '\n' > de.dic
+
+
+2/ Le debugging d'une application java dans vscode est trés peu pratique, les extensions ne sont pas mature
+Cf : https://marketplace.visualstudio.com/items?itemName=donjayamanne.javaDebugger
+Le 12/03/2017
