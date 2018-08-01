@@ -36,7 +36,7 @@
                 <version>2.2</version>
                 <configuration>
                     <url>http://localhost:8080/manager/text</url>
-                    <server>Tomcat9Server</server>
+                    <server>Tomcat8Server</server>
                     <path>/run_tomcat_2</path>
                 </configuration>
             </plugin>
